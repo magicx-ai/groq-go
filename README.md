@@ -3,7 +3,7 @@ The Groq Go Client is a Go library that provides easy access to the Groq API for
 
 ## Installation
 ```bash
-go get github.com/magicx-ai/groq-go/groq
+go get -u github.com/magicx-ai/groq-go/groq
 ```
 
 ## Usage
@@ -102,4 +102,9 @@ for res := range respCh {
 Mock groq.Client
 ```bash
 mockgen github.com/magicx-ai/groq-go/groq Client
+```
+
+You can use go generate
+```go
+//go:generate mockgen -destination {as_you_want} github.com/magicx-ai/groq-go/groq Client
 ```
