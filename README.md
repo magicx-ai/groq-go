@@ -1,5 +1,7 @@
 # groq-go
-The Groq Go Client is a Go library that provides easy access to the [Groq](https://groq.com/) API for creating chat completions and managing models. This client simplifies interactions with the API, including handling streaming responses.
+Go library that provides easy access to the [Groq](https://groq.com/) API for creating chat completions and managing models. This client simplifies interactions with the API, including handling streaming responses.
+
+This is an unofficial library and is not affiliated with Groq.
 
 ## Installation
 ```bash
