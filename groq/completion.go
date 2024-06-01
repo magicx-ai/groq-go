@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	BaseURL = "https://api.groq.com/openai"
+	baseURL = "https://api.groq.com/openai"
 )
 
 type Client interface {
@@ -28,10 +28,18 @@ type client struct {
 	client  *http.Client
 }
 
+type MessageRole string
+
+const (
+	MessageRoleSystem    MessageRole = "system"
+	MessageRoleUser      MessageRole = "user"
+	MessageRoleAssistant MessageRole = "assistant"
+)
+
 // Message represents a message in the chat completion request.
 type Message struct {
-	Role    string `json:"role"`    // Role of the message sender (e.g., "user" or "assistant")
-	Content string `json:"content"` // Content of the message
+	Role    MessageRole `json:"role"`    // Role of the message sender (e.g., "user" or "assistant")
+	Content string      `json:"content"` // Content of the message
 }
 
 // ChatCompletionRequest represents the request body for creating a chat completion.
@@ -94,7 +102,7 @@ func NewClient(apiKey string, httpClient *http.Client) Client {
 		apiKey: apiKey,
 		client: httpClient,
 		// NOTE(@Kcrong): Need to handle if the user wants to use a different base URL
-		baseURL: BaseURL,
+		baseURL: baseURL,
 	}
 }
 
