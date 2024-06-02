@@ -8,6 +8,9 @@ format:
 test:
 	go test -cover -v ./...
 
+integration-test:
+	go test -tags=integration -v ./...
+
 generate:
 	@go install go.uber.org/mock/mockgen@latest
 	go generate ./...

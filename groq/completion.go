@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 )
@@ -28,31 +29,16 @@ type client struct {
 	client  *http.Client
 }
 
-type MessageRole string
-
-const (
-	MessageRoleSystem    MessageRole = "system"
-	MessageRoleUser      MessageRole = "user"
-	MessageRoleAssistant MessageRole = "assistant"
-)
-
-// Message represents a message in the chat completion request.
-type Message struct {
-	Role    MessageRole `json:"role"`    // Role of the message sender (e.g., "user" or "assistant")
-	Content string      `json:"content"` // Content of the message
-}
-
 // ChatCompletionRequest represents the request body for creating a chat completion.
 type ChatCompletionRequest struct {
-	Messages         []Message   `json:"messages"`                    // List of messages comprising the conversation
+	Messages         []Message   `json:"messages"`                    // A list of messages comprising the conversation so far.
 	Model            ModelID     `json:"model"`                       // ID of the model to use
-	MaxTokens        int         `json:"max_tokens,omitempty"`        // Maximum number of tokens to generate
+	MaxTokens        int         `json:"max_tokens,omitempty"`        // The maximum number of tokens that can be generated in the chat completion. The total length of input tokens and generated tokens is limited by the model's context length.
 	Temperature      float64     `json:"temperature,omitempty"`       // Sampling temperature
 	TopP             float64     `json:"top_p,omitempty"`             // Nucleus sampling probability
 	NumChoices       int         `json:"n,omitempty"`                 // Number of completion choices to generate
 	PresencePenalty  float64     `json:"presence_penalty,omitempty"`  // Penalty for presence of tokens
-	FrequencyPenalty float64     `json:"frequency_penalty,omitempty"` // Penalty for frequency of tokens
-	LogitBias        interface{} `json:"logit_bias,omitempty"`        // Bias for token generation likelihood
+	FrequencyPenalty *float64    `json:"frequency_penalty,omitempty"` // Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
 	UserID           string      `json:"user,omitempty"`              // Unique identifier for the end-user
 	Stream           bool        `json:"stream,omitempty"`            // If set, partial message deltas will be sent as data-only server-sent events
 	ToolChoice       interface{} `json:"tool_choice,omitempty"`       // Controls which tool is called by the model
@@ -135,9 +121,18 @@ func (c *client) CreateChatCompletion(req ChatCompletionRequest) (*ChatCompletio
 		_ = Body.Close()
 	}(resp.Body)
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response body")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid status code: %d, body: %s", resp.StatusCode, body)
+	}
+
 	var chatResp ChatCompletionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := json.Unmarshal(body, &chatResp); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}
 
 	return &chatResp, nil
