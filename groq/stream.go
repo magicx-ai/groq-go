@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/tmaxmax/go-sse"
@@ -37,17 +39,29 @@ func (c *client) CreateChatCompletionStream(req ChatCompletionRequest) (<-chan *
 	responseCh := make(chan *ChatCompletionStreamResponse)
 
 	conn := sse.DefaultClient.NewConnection(httpReq)
-	conn.SubscribeToAll(func(event sse.Event) {
+
+	var remover sse.EventCallbackRemover
+	remover = conn.SubscribeToAll(func(event sse.Event) {
+		// Stream is terminated when the server sends "[DONE]"
+		if strings.Contains(event.Data, "DONE") {
+			// Close the response channel
+			close(responseCh)
+			// Remove the event subscriber itself
+			remover()
+		}
+
 		var chatResp ChatCompletionResponse
 		if err := json.Unmarshal([]byte(event.Data), &chatResp); err != nil {
 			responseCh <- &ChatCompletionStreamResponse{Error: errors.Wrap(err, "failed to unmarshal response")}
 			return
 		}
+
 		responseCh <- &ChatCompletionStreamResponse{Response: chatResp}
 	})
 
 	go func() {
-		if err := conn.Connect(); err != nil {
+		err := conn.Connect()
+		if err != nil && !errors.Is(err, io.EOF) {
 			responseCh <- &ChatCompletionStreamResponse{
 				Error: errors.Wrap(err, "failed to connect to the server"),
 			}
