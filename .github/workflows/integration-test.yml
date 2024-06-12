@@ -29,7 +29,7 @@ jobs:
         run: make integration-test
 
   integration-on-comment:
-    if: github.event_name == 'issue_comment' && contains('Kcrong,resoliwan,SeongIkKim', github.event.comment.user.login) && contains(github.event.comment.body, '/run integration')
+    if: contains('Kcrong,resoliwan,SeongIkKim', github.triggering_actor) && contains(github.event.comment.body, '/run integration')
     strategy:
       matrix:
         go: [ stable ]
