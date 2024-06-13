@@ -16,6 +16,10 @@ var apiKey = func() string {
 	return os.Getenv("GROQ_API_KEY")
 }()
 
+func TestSomething(t *testing.T) {
+	t.Log("This is a test")
+}
+
 func TestCreateChatCompletion(t *testing.T) {
 	if apiKey == "" {
 		t.Skip("GROQ_API_KEY not set")
