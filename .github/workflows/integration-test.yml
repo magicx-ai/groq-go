@@ -6,11 +6,11 @@ on:
   issue_comment:
     types: [created, edited]
 
-permissions:
-  contents: read
 
 jobs:
   integration-on-push:
+    permissions:
+      contents: read
     if: github.event_name == 'push'
     strategy:
       matrix:
@@ -29,6 +29,9 @@ jobs:
         run: make integration-test
 
   integration-on-comment:
+    permissions:
+        contents: read
+        pull-requests: write
     if: contains('Kcrong,resoliwan,SeongIkKim', github.triggering_actor) && contains(github.event.comment.body, '/run integration')
     strategy:
       matrix:
@@ -54,4 +57,3 @@ jobs:
               repo: context.repo.repo,
               body: '👋 Thanks for reporting! I have started the integration test. You can check the status [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})'
             })
-
