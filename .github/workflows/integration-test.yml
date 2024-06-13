@@ -1,0 +1,47 @@
+name: integration-test
+on:
+  push:
+    branches:
+      - main
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  integration-on-push:
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        go: [stable]
+        os: [ubuntu-latest]
+    name: test
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Run integration test
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: make integration-test
+
+  integration-on-comment:
+    if: contains('Kcrong,resoliwan,SeongIkKim', github.triggering_actor) && contains(github.event.comment.body, '/run integration')
+    strategy:
+      matrix:
+        go: [ stable ]
+        os: [ ubuntu-latest ]
+    name: test
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Run integration test
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: make integration-test
