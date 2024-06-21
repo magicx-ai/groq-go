@@ -3,7 +3,9 @@
 package groq
 
 import (
+	"context"
 	"fmt"
+	"github.com/fortytw2/leaktest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -55,13 +57,15 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		t.Skip("GROQ_API_KEY not set")
 	}
 
+	defer leaktest.Check(t)()
+
 	httpCli := &http.Client{
 		Timeout: 3 * time.Second,
 	}
 
 	c := NewClient(apiKey, httpCli)
-
-	stream, err := c.CreateChatCompletionStream(ChatCompletionRequest{
+	ctx := context.Background()
+	stream, closer, err := c.CreateChatCompletionStream(ctx, ChatCompletionRequest{
 		Messages: []Message{
 			{
 				Role:    MessageRoleSystem,
@@ -77,6 +81,9 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		NumChoices: 1,
 		Stream:     true,
 	})
+	if closer != nil {
+		defer closer()
+	}
 	require.NoError(t, err, "failed to create chat completion")
 
 	for r := range stream {
