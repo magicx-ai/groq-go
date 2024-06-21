@@ -2,6 +2,7 @@ package groq
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ const (
 
 type Client interface {
 	CreateChatCompletion(ChatCompletionRequest) (*ChatCompletionResponse, error)
-	CreateChatCompletionStream(ChatCompletionRequest) (<-chan *ChatCompletionStreamResponse, error)
+	CreateChatCompletionStream(context.Context, ChatCompletionRequest) (<-chan *ChatCompletionStreamResponse, func(), error)
 	ListModels() (*ListModelsResponse, error)
 	RetrieveModel(ModelID) (*Model, error)
 }
