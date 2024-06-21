@@ -1,6 +1,7 @@
 package example
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -91,7 +92,10 @@ func ExampleClient_CreateChatCompletionStream() {
 		Stream:      true,
 	}
 
-	respCh, err := cli.CreateChatCompletionStream(req)
+	respCh, closer, err := cli.CreateChatCompletionStream(context.Background(), req)
+	if closer != nil {
+		defer closer()
+	}
 	if err != nil {
 		fmt.Println(fmt.Errorf("error is occurred: %v", err))
 		return
