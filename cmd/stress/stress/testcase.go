@@ -1,6 +1,7 @@
 package stress
 
 import (
+	"context"
 	"github.com/magicx-ai/groq-go/groq"
 	"github.com/pkg/errors"
 	"net/http"
@@ -48,14 +49,15 @@ func CompletionFunc(apiKey string) func() error {
 
 func CompletionStreamFunc(apiKey string) func() error {
 	return func() error {
-
 		httpCli := &http.Client{
 			Timeout: 3 * time.Second,
 		}
 
 		c := groq.NewClient(apiKey, httpCli)
 
-		stream, err := c.CreateChatCompletionStream(groq.ChatCompletionRequest{
+		ctx := context.Background()
+
+		stream, closer, err := c.CreateChatCompletionStream(ctx, groq.ChatCompletionRequest{
 			Messages: []groq.Message{
 				{
 					Role:    groq.MessageRoleSystem,
@@ -71,6 +73,9 @@ func CompletionStreamFunc(apiKey string) func() error {
 			NumChoices: 1,
 			Stream:     true,
 		})
+		if closer != nil {
+			defer closer()
+		}
 		if err != nil {
 			return errors.Wrap(err, "failed to create chat completion")
 		}

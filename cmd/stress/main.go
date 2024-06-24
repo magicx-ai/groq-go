@@ -86,8 +86,8 @@ func main() {
 	}
 
 	const (
-		targetRPS = 10
-		duration  = 5 * time.Second
+		targetRPS = 3
+		duration  = 30 * time.Minute
 	)
 
 	// Configure the stress test
